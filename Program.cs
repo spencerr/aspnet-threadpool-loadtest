@@ -1,12 +1,27 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using ThreadPoolDemo.Data;
+using ThreadPoolDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Simulate pod on 4core vm
+ThreadPool.SetMinThreads(4, 4);
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add database context
+builder.Services.AddDbContext<LoadTestDbContext>(options =>
+    options.UseInMemoryDatabase("LoadTestDb"));
+
+// Add simulation services
+builder.Services.AddScoped<IDatabaseSimulationService, DatabaseSimulationService>();
+builder.Services.AddSingleton<IRedisSimulationService, RedisSimulationService>();
+builder.Services.AddScoped<DataSeedingService>();
 
 // Add thread pool monitoring service
 builder.Services.AddSingleton<ThreadPoolMonitor>();
@@ -23,6 +38,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 app.MapControllers();
+
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var seedingService = scope.ServiceProvider.GetRequiredService<DataSeedingService>();
+    await seedingService.SeedDataAsync();
+}
 
 // Optional: Prime the thread pool on startup
 var primeOnStartup = builder.Configuration.GetValue<bool>("PrimeThreadPool", false);

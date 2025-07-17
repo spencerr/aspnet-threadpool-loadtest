@@ -37,11 +37,15 @@ This project demonstrates how the .NET thread pool behavior affects API throughp
 - `GET /api/LoadTest/health` - Health check endpoint
 
 ### Load Testing Endpoints
-- `GET /api/LoadTest/fast` - Fast I/O-bound operation (50ms delay)
-- `GET /api/LoadTest/slow` - Slow I/O-bound operation (2s delay)
-- `GET /api/LoadTest/cpu-bound` - CPU-intensive operation
-- `GET /api/LoadTest/mixed` - Mixed I/O and CPU operation
+- `GET /api/LoadTest/fast` - Fast I/O-bound operation with Redis cache and database queries
+- `GET /api/LoadTest/slow` - Slow I/O-bound operation with complex database analytics
+- `GET /api/LoadTest/cpu-bound` - CPU-intensive operation with database updates
+- `GET /api/LoadTest/mixed` - Mixed I/O and CPU operation with order creation
 - `GET /api/LoadTest/blocking` - Blocking synchronous operation (anti-pattern)
+- `GET /api/LoadTest/database-info` - Database and cache statistics endpoint
+- `GET /api/LoadTest/stats` - Thread pool statistics
+- `GET /api/LoadTest/health` - Health check endpoint
+- `POST /api/LoadTest/prime` - Prime thread pool endpoint
 
 ## Running the Demo
 
@@ -136,6 +140,31 @@ The load tests are designed to ensure proper isolation between primed and non-pr
 - Simple script to verify isolation is working
 - Tests each API separately, then together
 - Provides clear before/after thread pool stats
+
+## Database and Cache Simulation
+
+The application now includes realistic database and cache simulation to better represent real-world network traffic:
+
+### Database Simulation
+- **In-Memory Database**: Uses Entity Framework Core with SQLite in-memory database
+- **Realistic Data Model**: Users, Orders, Products, OrderItems, and UserSessions
+- **Seeded Test Data**: 50 users, 30 products, 200 orders with realistic relationships
+- **Variable Latency**: Simulates network latency (5-60ms) for different operation types
+- **Complex Queries**: Includes joins, aggregations, and filtering operations
+
+### Redis Cache Simulation
+- **In-Memory Cache**: Thread-safe concurrent dictionary simulating Redis
+- **TTL Support**: Automatic expiration of cached items
+- **Realistic Operations**: Get, Set, Delete, Exists, Increment, Decrement
+- **Network Latency**: Simulates Redis network calls (1-8ms)
+- **Background Cleanup**: Automatic removal of expired cache entries
+
+### Endpoint Behaviors
+- **Fast Operation**: User lookup with cache check and order history
+- **Slow Operation**: Complex analytics with expensive aggregations and caching
+- **CPU-bound Operation**: Product processing with stock updates
+- **Mixed Operation**: Order creation with session management
+- **Blocking Operation**: Synchronous processing (demonstrates anti-pattern)
 
 ## Thread Pool Metrics
 
