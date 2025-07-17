@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  threadpool-demo:
+    build: .
+    ports:
+      - "8001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - PrimeThreadPool=false
+      - ThreadPoolMonitoringInterval=3000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'  # Limit to 250m CPU
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/LoadTest/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  threadpool-demo-primed:
+    build: .
+    ports:
+      - "8002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - PrimeThreadPool=true
+      - ThreadPoolMonitoringInterval=3000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'  # Limit to 250m CPU
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/LoadTest/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
